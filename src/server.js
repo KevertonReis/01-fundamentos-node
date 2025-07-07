@@ -1,41 +1,37 @@
-import http from  'node:http'
-import { json } from './middlewares/json.js'
-import { Database } from './database.js'
-import { randomUUID } from 'node:crypto'
+import http from "node:http";
+import { json } from "./middlewares/json.js";
+import { Database } from "./database.js";
+import { routes } from "./routes.js";
 
 // UUID é um identificador único universal, usado para identificar de forma única um objeto ou entidade em sistemas distribuídos.
 
+//3 tipo de parametros de rota:
+//em URL
+// - Query Params: ?search=algumacoisa&limit=10 (usado para filtros, paginação, etc.)
+// - Route Params: /users/1 (usado para identificar um recurso específico) 
+//fora da URL 
+// - Request Body: envio de informaçoes de um formulario { "name": "John", "email": "}
 
-const database = new Database
+const database = new Database();
 
-const server = http.createServer(async(req, res) => {
-  const {method, url} = req
+const server = http.createServer(async (req, res) => {
+  const { method, url } = req;
 
-  await json(req,res)
+  await json(req, res);
 
-  if (method === 'GET' && url === '/users') {
-    const users = database.select('users')
-    return res.end(JSON.stringify(users))
-  }
-  
-  if (method === 'POST' && url === '/users') {
-    const {name, email} = req.body
+  const route = routes.find((route) => {
+    return route.method === method && route.path.test(url);
+  });
 
-    const user = {
-      id: randomUUID(),
-      name,
-      email,
-      created_at: new Date()
-    }
-    // Simula a inserção do usuário no banco de dados
-    database.insert('users', user)
-   
-    return res.writeHead(201).end()
+  if (route) {
+    const routeParams = req.url.match(route.path); //extrai os parametros da rota
+
+    return route.handler(req, res, database);
   }
 
-  return res.writeHead(404).end('Not Found')
-}) 
+  return res.writeHead(404).end("Not Found");
+});
 
-console.log("Servidor rodando na porta 3333")
+console.log("Servidor rodando na porta 3333");
 
-server.listen(3333)
+server.listen(3333);
