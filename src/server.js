@@ -26,7 +26,9 @@ const server = http.createServer(async (req, res) => {
   if (route) {
     const routeParams = req.url.match(route.path); //extrai os parametros da rota
 
-    return route.handler(req, res, database);
+    req.params = { ...routeParams.groups}
+
+    return route.handler(req, res);
   }
 
   return res.writeHead(404).end("Not Found");

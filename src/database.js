@@ -36,4 +36,12 @@ export class Database {
     return data;
 
   }
+
+  delete(table, id) {
+    const rowIndex = this.#database[table].findIndex(row => row.id === id) // percorre todas as linhas do database que tenham o ID igual ao ID selecionado para exclusao
+  
+    if (rowIndex > -1) {
+      this.#database[table]
+    }
+  }
 }
