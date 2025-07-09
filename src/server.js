@@ -2,6 +2,7 @@ import http from "node:http";
 import { json } from "./middlewares/json.js";
 import { Database } from "./database.js";
 import { routes } from "./routes.js";
+import { extractQueryParams } from "./utils/extract-query-params.js";
 
 // UUID é um identificador único universal, usado para identificar de forma única um objeto ou entidade em sistemas distribuídos.
 
@@ -24,11 +25,13 @@ const server = http.createServer(async (req, res) => {
   });
 
   if (route) {
-    const routeParams = req.url.match(route.path); //extrai os parametros da rota
+    const routeParams = req.url.match(route.path); // extrai os parametros da rota usando a regex definida em buildRoutePath.js
 
-    req.params = { ...routeParams.groups}
+    const {query, ...params} = routeParams.groups // extrai os parametros da rota e separa os parametros de consulta (query) dos parametros da rota
 
-    return route.handler(req, res);
+    req.params = params // atribui os parametros da rota ao objeto req.params
+    req.query = query ? extractQueryParams(query) : {} // extrai os parametros de consulta (query) e atribui ao objeto req.query
+    return route.handler(req, res); // chama o handler da rota correspondente, passando os objetos req e res
   }
 
   return res.writeHead(404).end("Not Found");
